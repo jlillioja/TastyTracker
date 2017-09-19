@@ -1,38 +1,23 @@
 package com.jlillioja.tastytracker.Watchlist
 
 import android.content.Context
-import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.TableRow
-import android.widget.TextView
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import com.jlillioja.tastytracker.R
 
-/**
- * Created by jacob on 9/17/17.
- */
-class WatchlistRow(val mContext: Context, val stockSymbol: String, val bidPrice: String, val askPrice: String, val lastPrice: String) : TableRow(mContext) {
-    init {
-        addView(TextView(mContext).apply {
-            layout()
-            text = stockSymbol
-        })
-        addView(TextView(mContext).apply {
-            layout()
-            text = bidPrice
-        })
-        addView(TextView(mContext).apply {
-            layout()
-            text = askPrice
-        })
-        addView(TextView(mContext).apply {
-            layout()
-            text = lastPrice
-        })
-    }
+import kotlinx.android.synthetic.main.watchlist_row.view.*
 
-    private fun TextView.layout() {
-        this.gravity = Gravity.CENTER
-        this.setPadding(10,10,10,10)
-        this.setTextColor(android.graphics.Color.BLACK)
-        this.textSize = 24f
+class WatchlistRow(context: Context, parent: ViewGroup) {
+    var view = LayoutInflater.from(context).inflate(R.layout.watchlist_row, parent) as LinearLayout
+
+    fun displaying(stock: Stock): View {
+        view.symbol.text = stock.stockSymbol
+        view.bidPrice.text = stock.bidPrice
+        view.askPrice.text = stock.askPrice
+        view.lastPrice.text = stock.lastPrice
+
+        return view
     }
 }

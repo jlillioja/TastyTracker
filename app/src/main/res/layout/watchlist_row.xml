@@ -1,29 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
+<LinearLayout android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <TextView
-        android:id="@+id/stockSymbol"
-        android:text="Stock Symbol"
-        android:gravity="center"/>
-
+        android:id="@+id/symbol"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="SYMBOL"
+        android:textSize="24dp"
+        android:layout_weight="1"
+        android:textAlignment="center"
+        style="@style/AppTheme"
+        />
     <TextView
         android:id="@+id/bidPrice"
-        android:text="Bid Price"
-        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="BID PRICE"
+        android:textSize="24dp"
+        android:layout_weight="1"
+        android:textAlignment="center"
+        style="@style/AppTheme"
         />
-
     <TextView
         android:id="@+id/askPrice"
-        android:text="Ask Price"
-        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="ASK PRICE"
+        android:textSize="24dp"
+        android:layout_weight="1"
+        android:textAlignment="center"
+        style="@style/AppTheme"
         />
-
     <TextView
         android:id="@+id/lastPrice"
-        android:text="Last Price"
-        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="LAST PRICE"
+        android:textSize="24dp"
+        android:layout_weight="1"
+        android:textAlignment="center"
+        style="@style/AppTheme"
         />
-
-</TableRow>
+</LinearLayout>

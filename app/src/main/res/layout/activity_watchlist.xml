@@ -11,13 +11,48 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Watchlist"
-        android:gravity="center"
+        android:textAlignment="center"
         android:textAppearance="@android:style/TextAppearance.Material.Title" />
 
-    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/table"
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:stretchColumns="1">
-    </TableLayout>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="SYMBOL"
+            android:layout_weight="1"
+            android:textAlignment="center"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="BID PRICE"
+            android:layout_weight="1"
+            android:textAlignment="center"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="ASK PRICE"
+            android:layout_weight="1"
+            android:textAlignment="center"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="LAST PRICE"
+            android:layout_weight="1"
+            android:textAlignment="center"
+            />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/watchlist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+    </ListView>
 </LinearLayout>
