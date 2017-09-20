@@ -39,7 +39,9 @@
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
         </activity>
-        <activity android:name=".Watchlist.WatchlistActivity"></activity>
+        <activity android:name=".Watchlist.WatchlistActivity" />
+        <activity android:name=".AddSymbol.AddSymbolActivity" />
+        <activity android:name=".Watchlist.AddStockActivity"></activity>
     </application>
 
 </manifest>

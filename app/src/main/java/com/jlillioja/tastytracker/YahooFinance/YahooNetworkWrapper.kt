@@ -1,33 +1,19 @@
 package com.jlillioja.tastytracker.YahooFinance
 
-import android.util.Log
-import com.facebook.AccessToken
-import com.jlillioja.tastytracker.Facebook.FacebookEndpoint
-import com.jlillioja.tastytracker.Facebook.User
 import com.jlillioja.tastytracker.Watchlist.Stock
-import okhttp3.OkHttpClient
-import okhttp3.ResponseBody
-import okhttp3.logging.HttpLoggingInterceptor
+import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import rx.Observable
-import rx.schedulers.Schedulers
 
-/**
- * Created by jacob on 9/17/17.
- */
 class YahooNetworkWrapper {
     val BASE_URL = "http://finance.yahoo.com/d/"
 
     val yahooService = Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
-            .addCallAdapterFactory(RxJavaCallAdapterFactory.createWithScheduler(Schedulers.io()))
-            .client(OkHttpClient.Builder()
-                    .addInterceptor(HttpLoggingInterceptor()
-                            .also { it.level = HttpLoggingInterceptor.Level.BODY })
-                    .build())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
             .build()
             .create(YahooEndpoint::class.java)
 

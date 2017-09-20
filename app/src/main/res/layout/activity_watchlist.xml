@@ -3,22 +3,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:orientation="vertical"
+    android:padding="16dp"
     tools:context="com.jlillioja.tastytracker.Watchlist.WatchlistActivity"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TextView
-        android:id="@+id/watchlistTitle"
-        android:layout_width="match_parent"
+    <Spinner
+        android:id="@+id/watchlistSpinner"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Watchlist"
-        android:textAlignment="center"
-        android:textAppearance="@android:style/TextAppearance.Material.Title" />
-
+        android:layout_gravity="center"
+            android:textAppearance="@android:style/TextAppearance.Material.Title"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp">
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -50,7 +51,7 @@
     </LinearLayout>
 
     <ListView
-        android:id="@+id/watchlist"
+        android:id="@+id/stockList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">

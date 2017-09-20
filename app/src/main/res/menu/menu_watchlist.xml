@@ -6,4 +6,10 @@
         android:title="Add Stock"
         android:orderInCategory="1"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/addList"
+        android:title="Add List"
+        android:orderInCategory="2"
+        app:showAsAction="ifRoom" />
 </menu>

@@ -1,80 +1,111 @@
 package com.jlillioja.tastytracker.Watchlist
 
-import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.widget.ArrayAdapter
 import com.jlillioja.tastytracker.Facebook.FacebookNetworkWrapper
 import com.jlillioja.tastytracker.R
 import com.jlillioja.tastytracker.YahooFinance.YahooNetworkWrapper
 
 import kotlinx.android.synthetic.main.activity_watchlist.*
-import rx.Observable
-import rx.android.schedulers.AndroidSchedulers
 import java.util.concurrent.TimeUnit
 import android.widget.TextView
-import rx.subjects.BehaviorSubject
-import android.R.menu
 import android.view.*
-
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.subjects.BehaviorSubject
 
 class WatchlistActivity : AppCompatActivity() {
-
-    val LOG_TAG = "Tracker Activity"
+    val LOG_TAG = "WatchlistActivity"
 
     val facebook = FacebookNetworkWrapper()
     val yahoo = YahooNetworkWrapper()
 
-    val stocks = BehaviorSubject.create(mutableListOf("AAPL", "MSFT", "ES"))
+    val stocks = BehaviorSubject.createDefault(listOf("AAPL", "MSFT", "ES"))
 
-    lateinit var stockAdapter: StockAdapter
+    lateinit var stockListAdapter: StockArrayAdapter
+    lateinit var watchlistAdapter: WatchlistAdapter
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_watchlist, menu)
         return true
     }
 
+    private val ADD_STOCK_CODE: Int = 1
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val id = item.getItemId()
+        when (item.itemId) {
+            R.id.addStock -> {
+                val intent = Intent(this, AddStockActivity::class.java)
+                startActivityForResult(intent, ADD_STOCK_CODE)
+                return true
+            }
+            R.id.addList -> {
+                return true
+            }
+            else -> {
+                return super.onOptionsItemSelected(item)
+            }
+        }
+    }
 
-        return if (id == R.id.addStock) {
-            true
-        } else super.onOptionsItemSelected(item)
-
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == ADD_STOCK_CODE) {
+            val newStock = data?.getStringExtra("SYMBOL")
+            addStock(newStock)
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_watchlist)
 
-        stockAdapter = StockAdapter(this)
+        stockListAdapter = StockArrayAdapter(this)
+        stockList.adapter = stockListAdapter
 
-        watchlist.adapter = stockAdapter
-        watchlist.setOnItemLongClickListener { adapterView, view, index, id ->
-            stocks.onNext(stocks.value.apply { removeAt(index) })
+        watchlistAdapter = WatchlistAdapter(this)
+        watchlistSpinner.adapter = watchlistAdapter
+
+        stockList.setOnItemLongClickListener { adapterView, view, index, id ->
+            removeStock(view.findViewById<TextView>(R.id.symbol)?.text?.toString())
             true
         }
 
-        facebook.fetchUser().subscribe { user ->
-            watchlistTitle.text = "${user?.firstName ?: "Somebody"} first list"
+        facebook.fetchUser().observeOn(AndroidSchedulers.mainThread()).subscribe { user ->
+            watchlistAdapter.username = user?.firstName ?: "Somebody"
         }
 
 
         Observable.merge(
-                stocks.asObservable(),
-                Observable.interval(5, TimeUnit.SECONDS).withLatestFrom(stocks) { _, stocks -> stocks }
+                stocks,
+                Observable.interval(5, TimeUnit.SECONDS).map { stocks.value }
         )
+                .filter { it.isNotEmpty() }
                 .flatMap { yahoo.fetchData(it) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
-                    stockAdapter.clear()
-                    stockAdapter.addAll(it)
-                    stockAdapter.notifyDataSetInvalidated()
+                    stockListAdapter.clear()
+                    stockListAdapter.addAll(it)
+                    stockListAdapter.notifyDataSetInvalidated()
                 }
     }
 
-    class StockAdapter(context: Context) : ArrayAdapter<Stock>(context, 0) {
+    private fun addStock(symbol: String?) {
+        if (symbol != null) {
+            stocks.onNext(stocks.value.plus(symbol))
+        }
+    }
+
+    private fun removeStock(symbol: String?) {
+        stocks.onNext(stocks.value.filter { it != symbol })
+    }
+
+    class StockArrayAdapter(context: Context) : ArrayAdapter<Stock>(context, 0) {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
             val stock = getItem(position)
 
@@ -90,5 +121,32 @@ class WatchlistActivity : AppCompatActivity() {
             return resultView
         }
     }
+
+    class WatchlistAdapter(context: Context) : ArrayAdapter<String>(context, 0) {
+
+        var username: String = "Somebody"
+        set(value) {
+            clear()
+            addAll(lists.map { value + it })
+        }
+
+        val lists = mutableListOf("'s first list")
+
+        init {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        }
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val list = getItem(position)
+
+            val resultView = if (convertView == null) LayoutInflater.from(context).inflate(android.R.layout.simple_spinner_item, parent, false) else convertView
+
+            resultView.findViewById<TextView>(android.R.id.text1).text = list
+
+            return resultView
+        }
+    }
 }
+
+
 
