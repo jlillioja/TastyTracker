@@ -14,17 +14,24 @@ import kotlinx.android.synthetic.main.activity_watchlist.*
 import java.util.concurrent.TimeUnit
 import android.widget.TextView
 import android.view.*
+import com.jakewharton.rxbinding2.widget.RxAdapter
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.subjects.BehaviorSubject
 
-class WatchlistActivity : AppCompatActivity() {
+class WatchlistActivity : AppCompatActivity(), AddWatchlistDialog.Listener {
+    override fun onListAdded(name: String?) {
+        watchlistAdapter.add(name)
+    }
+
     val LOG_TAG = "WatchlistActivity"
 
     val facebook = FacebookNetworkWrapper()
     val yahoo = YahooNetworkWrapper()
 
     val stocks = BehaviorSubject.createDefault(listOf("AAPL", "MSFT", "ES"))
+
+    data class Watchlist(var name: String, var stocks: List<Stock>)
 
     lateinit var stockListAdapter: StockArrayAdapter
     lateinit var watchlistAdapter: WatchlistAdapter
@@ -44,6 +51,7 @@ class WatchlistActivity : AppCompatActivity() {
                 return true
             }
             R.id.addList -> {
+                AddWatchlistDialog().show(fragmentManager, "Add Watchlist Dialog")
                 return true
             }
             else -> {
@@ -74,6 +82,10 @@ class WatchlistActivity : AppCompatActivity() {
         stockList.setOnItemLongClickListener { adapterView, view, index, id ->
             removeStock(view.findViewById<TextView>(R.id.symbol)?.text?.toString())
             true
+        }
+
+        watchlistSpinner.setOnItemClickListener { adapterView, view, index, id ->
+
         }
 
         facebook.fetchUser().observeOn(AndroidSchedulers.mainThread()).subscribe { user ->

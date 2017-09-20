@@ -41,7 +41,8 @@
         </activity>
         <activity android:name=".Watchlist.WatchlistActivity" />
         <activity android:name=".AddSymbol.AddSymbolActivity" />
-        <activity android:name=".Watchlist.AddStockActivity"></activity>
+        <activity android:name=".Watchlist.AddStockActivity" />
+        <activity android:name=".Watchlist.AddWatchlistDialog"></activity>
     </application>
 
 </manifest>
