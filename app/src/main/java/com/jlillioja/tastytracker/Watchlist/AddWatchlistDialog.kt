@@ -11,9 +11,6 @@ import com.jlillioja.tastytracker.R
 
 
 class AddWatchlistDialog() : DialogFragment() {
-
-
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val watchlistName = EditText(activity).apply { setPadding(5,5,5,5) }
 

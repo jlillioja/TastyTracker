@@ -1,10 +1,10 @@
 package com.jlillioja.tastytracker.Watchlist
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.widget.ArrayAdapter
 import com.jlillioja.tastytracker.Facebook.FacebookNetworkWrapper
 import com.jlillioja.tastytracker.R
@@ -14,30 +14,100 @@ import kotlinx.android.synthetic.main.activity_watchlist.*
 import java.util.concurrent.TimeUnit
 import android.widget.TextView
 import android.view.*
-import com.jakewharton.rxbinding2.widget.RxAdapter
+import android.widget.AdapterView
+import android.widget.AdapterView.OnItemSelectedListener
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
 
 class WatchlistActivity : AppCompatActivity(), AddWatchlistDialog.Listener {
-    override fun onListAdded(name: String?) {
-        watchlistAdapter.add(name)
-    }
 
-    val LOG_TAG = "WatchlistActivity"
+    private val LOG_TAG = "WatchlistActivity"
+    private val WATCHLISTS_KEY = "watchlists"
+    private val PREFERENCES_KEY = "TastyTracker"
 
     val facebook = FacebookNetworkWrapper()
     val yahoo = YahooNetworkWrapper()
 
-    val stocks = BehaviorSubject.createDefault(listOf("AAPL", "MSFT", "ES"))
+    val stocks = PublishSubject.create<List<String>>()
+    var watchlist = PublishSubject.create<String>()
 
     data class Watchlist(var name: String, var stocks: List<Stock>)
 
     lateinit var stockListAdapter: StockArrayAdapter
     lateinit var watchlistAdapter: WatchlistAdapter
 
+    var currentWatchlist: String? = null
+    var currentStocks: List<String> = emptyList()
+
+    private val defaultStocks = setOf("AAPL","MSFT","AMZN")
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_watchlist)
+
+        setUpWatchlistSpinner()
+        setUpStocklist()
+
+        watchlist.subscribe {
+            currentWatchlist = it
+            stocks.onNext(getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE).getStringSet(it, defaultStocks).toList())
+        }
+        stocks.subscribe {
+            currentStocks = it
+            getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE)
+                    .edit()
+                    .putStringSet(currentWatchlist, it.toSet())
+                    .apply()
+        }
+
+        Observable
+                .merge(
+                        stocks,
+                        Observable.interval(5, TimeUnit.SECONDS).map { currentStocks })
+//                .filter { it.isNotEmpty() }
+                .flatMap { if (it.isNotEmpty()) yahoo.fetchData(it) else Observable.just(emptyList()) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    stockListAdapter.clear()
+                    stockListAdapter.addAll(it)
+                    stockListAdapter.notifyDataSetInvalidated()
+                }
+
+        watchlist.onNext(getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE).getString("default watchlist", "first list"))
+    }
+
+    private fun setUpStocklist() {
+        stockListAdapter = StockArrayAdapter(this)
+        stockList.adapter = stockListAdapter
+
+        stockList.setOnItemLongClickListener { adapterView, view, index, id ->
+            removeStock(view.findViewById<TextView>(R.id.symbol)?.text?.toString()) //TODO better
+            true
+        }
+    }
+
+    private fun setUpWatchlistSpinner() {
+        watchlistAdapter = WatchlistAdapter(this)
+        watchlistAdapter.lists.addAll(getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE).getStringSet(WATCHLISTS_KEY, emptySet()))
+        watchlistSpinner.adapter = watchlistAdapter
+
+        facebook.fetchUser().observeOn(AndroidSchedulers.mainThread()).subscribe { user ->
+            watchlistAdapter.username = user?.firstName ?: "Somebody"
+        }
+
+        watchlistSpinner.onItemSelectedListener = object: OnItemSelectedListener {
+            override fun onItemSelected(adapterView: AdapterView<*>?, view: View?, index: Int, id: Long) {
+                watchlist.onNext(watchlistAdapter.getItem(index))
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) {}
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_watchlist, menu)
+
         return true
     }
 
@@ -69,52 +139,21 @@ class WatchlistActivity : AppCompatActivity(), AddWatchlistDialog.Listener {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_watchlist)
-
-        stockListAdapter = StockArrayAdapter(this)
-        stockList.adapter = stockListAdapter
-
-        watchlistAdapter = WatchlistAdapter(this)
-        watchlistSpinner.adapter = watchlistAdapter
-
-        stockList.setOnItemLongClickListener { adapterView, view, index, id ->
-            removeStock(view.findViewById<TextView>(R.id.symbol)?.text?.toString())
-            true
-        }
-
-        watchlistSpinner.setOnItemClickListener { adapterView, view, index, id ->
-
-        }
-
-        facebook.fetchUser().observeOn(AndroidSchedulers.mainThread()).subscribe { user ->
-            watchlistAdapter.username = user?.firstName ?: "Somebody"
-        }
-
-
-        Observable.merge(
-                stocks,
-                Observable.interval(5, TimeUnit.SECONDS).map { stocks.value }
-        )
-                .filter { it.isNotEmpty() }
-                .flatMap { yahoo.fetchData(it) }
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    stockListAdapter.clear()
-                    stockListAdapter.addAll(it)
-                    stockListAdapter.notifyDataSetInvalidated()
-                }
+    override fun onListAdded(name: String?) {
+        watchlistAdapter.add(name)
+        val existingWatchlists = getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE).getStringSet(WATCHLISTS_KEY, emptySet())
+        getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE).edit().putStringSet(WATCHLISTS_KEY, existingWatchlists.plus(name).toSet()).apply()
     }
 
     private fun addStock(symbol: String?) {
         if (symbol != null) {
-            stocks.onNext(stocks.value.plus(symbol))
+            val newStocks = currentStocks.plus(symbol)
+            stocks.onNext(newStocks)
         }
     }
 
     private fun removeStock(symbol: String?) {
-        stocks.onNext(stocks.value.filter { it != symbol })
+        stocks.onNext(currentStocks.filter { it != symbol })
     }
 
     class StockArrayAdapter(context: Context) : ArrayAdapter<Stock>(context, 0) {
@@ -135,14 +174,13 @@ class WatchlistActivity : AppCompatActivity(), AddWatchlistDialog.Listener {
     }
 
     class WatchlistAdapter(context: Context) : ArrayAdapter<String>(context, 0) {
-
         var username: String = "Somebody"
-        set(value) {
-            clear()
-            addAll(lists.map { value + it })
-        }
+            set(value) {
+                clear()
+                addAll(lists.map { "$value's $it" })
+            }
 
-        val lists = mutableListOf("'s first list")
+        val lists = mutableListOf<String>()
 
         init {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

@@ -36,7 +36,7 @@ class AddStockActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { offerCompletions(it) }
 
-        autocompleteList.setOnItemClickListener { adapterView, view, index, id ->
+        autocompleteList.setOnItemClickListener { _, view, index, _ ->
             setResult(Activity.RESULT_OK, Intent().apply { putExtra("SYMBOL", (view as TextView).text.toString()) })
             finish()
         }
