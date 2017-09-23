@@ -17,18 +17,18 @@ class AddWatchlistDialog() : DialogFragment() {
         val builder = AlertDialog.Builder(activity)
         builder.setMessage("Add Watchlist")
                 .setView(watchlistName)
-                .setPositiveButton("OK", { dialog, id ->
+                .setPositiveButton("OK", { _, _ ->
                     listener?.onListAdded(watchlistName.text.toString())
                     dismiss()
                 })
-                .setNegativeButton("Cancel", { dialog, id ->
+                .setNegativeButton("Cancel", { _, _ ->
                     dismiss()
                 })
         return builder.create()
     }
 
     interface Listener {
-        fun onListAdded(name: String?)
+        fun onListAdded(name: String)
     }
     var listener: Listener? = null
 
